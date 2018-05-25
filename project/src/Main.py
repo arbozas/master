@@ -8,8 +8,12 @@ from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer,Tfi
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import AdaBoostClassifier
+from sklearn.neural_network import MLPClassifier
+from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import confusion_matrix, classification_report
 from sklearn.svm import LinearSVC
+from sklearn import tree
 from itertools import islice
 from sklearn.metrics import accuracy_score
 import project.src.TextProcessing as tx
@@ -21,9 +25,11 @@ from sklearn.model_selection import cross_val_score
 import time
 client = pymongo.MongoClient('localhost', 27017)
 db = client['db']
-
+#nltk.download('stopwords')#download the list with stopwords if not exist
 RANDOM_STATE = 0
+number = 1000# amount of data you want to load from reviews number=0 brings all data
 
+#Predict and print results
 def print_results(clf, label='DEFAULT'):
     print('********* ' + label + " *********")
     y_pred = clf.predict(X_test)
@@ -33,6 +39,7 @@ def print_results(clf, label='DEFAULT'):
     stop = time.time()
     print("%20s accuracy: %0.3f (+/- %0.3f), time:%.3f" % (label, scores.mean(), scores.std() * 2, stop - start))
 
+#fit models
 def fit_clf(*args):
         pipeline = make_pipeline(*args)
         start = time.time()
@@ -41,16 +48,16 @@ def fit_clf(*args):
 
 if __name__ == '__' \
                'main__':
-    number=100000 #amount of data you want to load from reviews number=0 brings all data
+
     df = data.loadReviews(number)#load review data
     #print(df)
 
     #df.info()
     #stars = df.groupby('stars').mean()
     #print(stars)
-    #ax=sns.heatmap(data=stars.corr(), annot=True)
+   # ax=sns.heatmap(data=stars.corr(), annot=True)
     #plt.show()
-
+    #data.starCount()
 
     df=tx.stemming(df,"text","stemReviews")#calling method to stem column1 and put result  to column2
     df=tx.remove_stopword(df,"stemReviews","stopWordReviews")#calling method to stopword column1 and put result  to column2
@@ -71,17 +78,20 @@ if __name__ == '__' \
     #Tranform reviews to tf-idf vectors
     tvec_weights=tx.textTFIDF(df)
     #print(tvec_weights)
-
+    #tvec_weights=tx.textCountVec(df)
     #----------Classifications--------------------
     X_train, X_test, y_train, y_test = train_test_split(tvec_weights,df["targets"], test_size=0.33, random_state=RANDOM_STATE)
 
-
+    #models
     clfs = [
-        {'name': 'RandomForestClassifier', 'obj': RandomForestClassifier(random_state=RANDOM_STATE)},
+       {'name': 'RandomForestClassifier', 'obj': RandomForestClassifier(random_state=RANDOM_STATE)},
         {'name': 'LinearSVC', 'obj': LinearSVC(random_state=RANDOM_STATE)},
         {'name': 'MultinomialNB', 'obj':  MultinomialNB()},
-        {'name': 'Logistic Regresion',"obj":LogisticRegression()}
+        #{'name': 'AdaBoost', 'obj':AdaBoostClassifier(DecisionTreeClassifier(max_depth=2),n_estimators=300)},
+        {'name': 'Logistic Regresion',"obj":LogisticRegression(random_state=RANDOM_STATE)},
+        #{'name': 'Neural MLP',"obj":MLPClassifier(random_state=RANDOM_STATE)}
     ]
 
+    #Run models
     for  c in  clfs:
-        print_results(fit_clf(c['obj']), c['name'])
+        print_results(fit_clf(c['obj']), c['name'])#print results

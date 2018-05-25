@@ -1,5 +1,7 @@
 import pymongo
 import pandas as pa
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 client = pymongo.MongoClient('localhost', 27017)
 db = client['db']
@@ -39,10 +41,24 @@ def loadReviews(datalimit):
 
     #print("Reviews")
     #Number of reviews for each star category
+def starCount():
     #for i in range(6):
-        #starcount=db['reviews'].find({"stars": i}, {'text':1,"_id":0,"stars":1 }).count()
+       # starcount=db['reviews'].find({"stars": i}, {'text':1,"_id":0,"stars":1 }).count()
         #print("Number of reviews with "+ str(i)+" stars")
-        #print(starcount)
+       # print(starcount)
 
-    #df = pa.DataFrame(list(db['reviews'].find({"stars": 5}, {'text':1,"_id":0,"stars":1 })))
-    #print(df)
+    df_rev = pa.DataFrame(list(db['reviews'].find({}, {"_id":0,"stars":1,"business_id":1,"user_id":1})))
+    df_rest= pa.DataFrame(list(db['restaurants'].find({}, { "_id": 0, "categories":1,"business_id":1,"neighborhood":1})))
+    df_user=pa.DataFrame(list(db['users'].find({}, { "_id": 0, "user_id":1,"review_count":1})))
+    df_rev_rest=pa.merge(df_rev, df_rest, on='business_id', how='inner')
+    #print(df_rev_rest)
+    df_rev_users = pa.merge(df_rev, df_user, on='user_id', how='inner')
+    print(df_rev_users)
+    #plot stars numbers
+    plt.hist(df_rev_rest.stars)
+
+    stars = df_rev_users.groupby('stars').mean()
+    print(stars)
+    ax=sns.heatmap(data=stars.corr(), annot=True)
+    plt.show()
+

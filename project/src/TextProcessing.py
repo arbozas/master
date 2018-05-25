@@ -5,11 +5,10 @@ from nltk.corpus import stopwords
 from collections import Counter
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer,TfidfTransformer
 from itertools import islice
+from sklearn import preprocessing
 import numpy as np
-
 import pandas as pa
 
-#nltk.download('stopwords')#download the list with stopwords if not exist
 client = pymongo.MongoClient('localhost', 27017)
 db = client['db']
 
@@ -42,7 +41,21 @@ def textTFIDF(df):
     tvec_weights = tvec.fit_transform(df.finalReviews.dropna())#Fit
     weights = np.asarray(tvec_weights.mean(axis=0)).ravel().tolist()
     weights_df = pa.DataFrame({'term': tvec.get_feature_names(), 'weight': weights})
-    print(weights_df.sort_values(by='weight', ascending=False).head(20))
-    return tvec_weights
+    print(weights_df.sort_values(by='weight', ascending=True).head(20))
+    X_normalized = preprocessing.normalize(tvec_weights, norm='l2')
+    print(X_normalized)
+    return X_normalized
 
-
+def textCountVec(df):
+    cvec = CountVectorizer(min_df=.0025, max_df=.1, ngram_range=(1,2))
+    cvec.fit(df.finalReviews)
+    print(list(islice(cvec.vocabulary_.items(), 20)))
+    cvec_counts = cvec.transform(df.finalReviews)
+    print(cvec_counts.shape)
+    transformer = TfidfTransformer()
+    transformed_weights = transformer.fit_transform(cvec_counts)
+    print(transformed_weights)
+    print(transformed_weights.shape)
+    X_normalized = preprocessing.normalize(cvec_counts, norm='l2')
+    print(X_normalized)
+    return X_normalized
