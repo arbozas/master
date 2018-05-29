@@ -4,8 +4,8 @@ from nltk.stem.porter import *
 from nltk.corpus import stopwords
 import pandas as pa
 #nltk.download('stopwords')#download the list with stopwords if not exist
-client = pymongo.MongoClient('localhost', 27017)
-db = client['db']
+client = pymongo.MongoClient('mongodb://localhost:27017/')
+db = client['yelp_db']
 
 def find_all_restaurants():
     return db['restaurants'].find({})
@@ -37,7 +37,6 @@ def upper_to_lower(df,column,newColumn):
 
 if __name__ == '__main__':
 
-    df = pa.DataFrame(list(db['restaurants'].find_one()))
     #print(df)
     df = pa.DataFrame(list(db['users'].find_one()))
     #print(df)

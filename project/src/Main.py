@@ -50,14 +50,14 @@ if __name__ == '__' \
                'main__':
 
     df = data.loadReviews(number)#load review data
+    data.starCount()
     #print(df)
 
-    #df.info()
+    df.info()
     #stars = df.groupby('stars').mean()
     #print(stars)
-   # ax=sns.heatmap(data=stars.corr(), annot=True)
+    #ax=sns.heatmap(data=stars.corr(), annot=True)
     #plt.show()
-    #data.starCount()
 
     df=tx.stemming(df,"text","stemReviews")#calling method to stem column1 and put result  to column2
     df=tx.remove_stopword(df,"stemReviews","stopWordReviews")#calling method to stopword column1 and put result  to column2
@@ -94,4 +94,4 @@ if __name__ == '__' \
 
     #Run models
     for  c in  clfs:
-        print_results(fit_clf(c['obj']), c['name'])#print results
+        print_results(fit_clf(c['obj']), c['name']) #print results
