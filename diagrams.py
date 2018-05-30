@@ -26,17 +26,15 @@ def storeImagePlotInDB(plot, db_to_store, name):
     fs.put(thedata, filename=name)
 
 # ------------- Figure 1: Distribution of star rating -----------#
-plt.figure(figsize=(12, 6))
 df_rest_star = pa.DataFrame(list(db['restaurants'].find({}, {"_id": 0, "stars": 1})))
 ax = sns.countplot(df_rest_star['stars'])
 plt.title('Figure 1: Distribution of star rating')
 plt.xlabel("Stars")
 plt.ylabel("Number of restaurants")
-plt.show()
 storeImagePlotInDB(plt, db_diagrams, 'Figure 1_Distribution of star rating')
+plt.show()
 
 # ------------- Figure 2: Distribution of restaurants per neighborhood -----------#
-plt.figure(figsize=(14, 8))
 df_rest= pa.DataFrame(list(db['restaurants'].find({}, { "_id": 0,"business_id":1, "neighborhood":1, "stars":1, 'review_count':1})))
 print('Number of neighbourhood listed', df_rest['neighborhood'].nunique())
 cnt = df_rest['neighborhood'].value_counts()[:17].to_frame()
@@ -44,13 +42,12 @@ sns.barplot(cnt['neighborhood'], cnt.index, palette = 'summer')
 plt.xlabel('Number of restaurants')
 plt.ylabel("Neighborhoods")
 plt.title('Figure 2: Distribution of restaurants per neighborhood')
-plt.show()
 storeImagePlotInDB(plt, db_diagrams, 'Figure 2_Distribution of restaurants per neighborhood')
+plt.show()
 
 
 # ------------- Figure 3: Distribution of reviews per neighborhood -----------#
-plt.figure(figsize=(14, 8))
-df_rev = pa.DataFrame(list(db['reviews'].find({}, {"_id":0,"stars":1,"business_id":1, "date":1})))
+df_rev = pa.DataFrame(list(db['reviews'].find({}, {"_id":0,"stars":1,"business_id":1, "date":1}).limit(100)))   #Add limit in order to run the code faster
 df_rev_rest=pa.merge(df_rev, df_rest, on='business_id', how='inner')
 cnt = df_rev_rest['neighborhood'].value_counts()[:17].to_frame()
 print(cnt)
@@ -58,8 +55,8 @@ sns.barplot(cnt['neighborhood'], cnt.index, palette='RdBu')
 plt.xlabel('Number of reviews')
 plt.ylabel("Neighborhoods")
 plt.title('Figure 3: Distribution of reviews per neighborhood')
-plt.show()
 storeImagePlotInDB(plt, db_diagrams, 'Figure 3_Distribution of reviews per neighborhood')
+plt.show()
 
 
 # ------------- Figure 4: Distribution of reviews per month -----------#
@@ -89,7 +86,6 @@ df_rev.loc[df_rev['months'] == "10", 'month_name'] = 'October'
 df_rev.loc[df_rev['months'] == "11", 'month_name'] = 'November'
 df_rev.loc[df_rev['months'] == "12", 'month_name'] = 'December'
 
-plt.figure(figsize=(12, 6))
 cnt = df_rev['month_name'].value_counts()[:12].to_frame()
 print(cnt)
 sns.countplot(df_rev['month_name'],  palette = 'Blues_d')
@@ -97,8 +93,8 @@ plt.title('Figure 4: Distribution of reviews per month')
 plt.xlabel("Month")
 plt.xticks(rotation=45)
 plt.ylabel("Number of reviews")
-plt.show()
 storeImagePlotInDB(plt, db_diagrams, 'Figure 4_Distribution of reviews per month')
+plt.show()
 
 
 # ------------- Figure 5: Month of review grouped by star -----------#
@@ -115,14 +111,14 @@ df_rev.loc[df_rev['months'] == "10", 'newmonth'] = 10
 df_rev.loc[df_rev['months'] == "11", 'newmonth'] = 11
 df_rev.loc[df_rev['months'] == "12", 'newmonth'] = 12
 
-print(df_rev['months'])
+
 sns.set_style("darkgrid")
 g = sns.FacetGrid(data=df_rev, col='stars', margin_titles=True)
 g.axes[0,1].set_xticks([1,2,3,4,5,6,7,8,9,10,11,12])
 g.map(plt.hist, 'newmonth', bins=12)
 g.fig.suptitle('Figure 5: Month of review grouped by star')
-plt.show()
 storeImagePlotInDB(plt, db_diagrams, 'Figure 5_Month of review grouped by star')
+plt.show()
 
 
 # ------------- Figure 6: Review_count distribution for businesses grouped by star -----------#
@@ -136,12 +132,18 @@ sns.set_style("darkgrid", {"axes.facecolor": ".9"})
 g = sns.FacetGrid(data=df_rest, col='star')
 g.map(plt.hist, 'review_count', bins=10)
 g.fig.suptitle('Figure 6: Review count distribution for businesses grouped by star')
-plt.show()
 storeImagePlotInDB(plt, db_diagrams, 'Figure 6_Review count distribution for businesses grouped by star')
+plt.show()
+
+
+# ------------- Figure 7: Review_count distribution for businesses grouped by star -----------#
+
+#stars = df.groupby('star').mean()
+#print(stars)
+#ax=sns.heatmap(data=stars.corr(), annot=True)
+#plt.show()
 
 
 # -------------
-print ("Listing " + str(plt.get_figlabels()))
-# storing image into the database for later use
-storeImagePlotInDB(plt, db_diagrams, "second")
-plt.show()
+#print ("Listing " + str(plt.get_figlabels()))
+
