@@ -3,30 +3,49 @@ import pandas as pa
 import pymongo
 import seaborn as sns
 from dateutil.parser import parse
+import gridfs
 
 client = pymongo.MongoClient('localhost', 27017)
 db = client['db']
+db_diagrams = client['diagrams']
+
+def storeImagePlotInDB(plot, db_to_store, name):
+    # tmp local image, to be delete
+    path_to_store = "./" + name + ".png"
+    # print(path_to_store)
+    plot.savefig(path_to_store)
+
+    # open the file
+    datafile = open(path_to_store, "rb")
+    thedata = datafile.read()
+
+    # create a new gridfs object.
+    fs = gridfs.GridFS(db_to_store)
+
+    # store the data in the database
+    fs.put(thedata, filename=name)
 
 # ------------- Figure 1: Distribution of star rating -----------#
 plt.figure(figsize=(12, 6))
 df_rest_star = pa.DataFrame(list(db['restaurants'].find({}, {"_id": 0, "stars": 1})))
 ax = sns.countplot(df_rest_star['stars'])
-plt.title('Distribution of star rating')
+plt.title('Figure 1: Distribution of star rating')
 plt.xlabel("Stars")
 plt.ylabel("Number of restaurants")
 plt.show()
-
+storeImagePlotInDB(plt, db_diagrams, 'Figure 1_Distribution of star rating')
 
 # ------------- Figure 2: Distribution of restaurants per neighborhood -----------#
 plt.figure(figsize=(14, 8))
-df_rest= pa.DataFrame(list(db['restaurants'].find({}, { "_id": 0,"business_id":1, "neighborhood":1})))
+df_rest= pa.DataFrame(list(db['restaurants'].find({}, { "_id": 0,"business_id":1, "neighborhood":1, "stars":1, 'review_count':1})))
 print('Number of neighbourhood listed', df_rest['neighborhood'].nunique())
 cnt = df_rest['neighborhood'].value_counts()[:17].to_frame()
 sns.barplot(cnt['neighborhood'], cnt.index, palette = 'summer')
 plt.xlabel('Number of restaurants')
 plt.ylabel("Neighborhoods")
-plt.title('Distribution of restaurants per neighborhood')
+plt.title('Figure 2: Distribution of restaurants per neighborhood')
 plt.show()
+storeImagePlotInDB(plt, db_diagrams, 'Figure 2_Distribution of restaurants per neighborhood')
 
 
 # ------------- Figure 3: Distribution of reviews per neighborhood -----------#
@@ -38,8 +57,9 @@ print(cnt)
 sns.barplot(cnt['neighborhood'], cnt.index, palette='RdBu')
 plt.xlabel('Number of reviews')
 plt.ylabel("Neighborhoods")
-plt.title('Distribution of reviews per neighborhood')
+plt.title('Figure 3: Distribution of reviews per neighborhood')
 plt.show()
+storeImagePlotInDB(plt, db_diagrams, 'Figure 3_Distribution of reviews per neighborhood')
 
 
 # ------------- Figure 4: Distribution of reviews per month -----------#
@@ -72,10 +92,56 @@ df_rev.loc[df_rev['months'] == "12", 'month_name'] = 'December'
 plt.figure(figsize=(12, 6))
 cnt = df_rev['month_name'].value_counts()[:12].to_frame()
 print(cnt)
-sns.countplot(df_rev['month_name'],  palette = 'ocean')
-plt.title('Distribution of reviews per month')
+sns.countplot(df_rev['month_name'],  palette = 'Blues_d')
+plt.title('Figure 4: Distribution of reviews per month')
 plt.xlabel("Month")
 plt.xticks(rotation=45)
 plt.ylabel("Number of reviews")
 plt.show()
+storeImagePlotInDB(plt, db_diagrams, 'Figure 4_Distribution of reviews per month')
 
+
+# ------------- Figure 5: Month of review grouped by star -----------#
+df_rev.loc[df_rev['months'] == "01", 'newmonth'] = 1
+df_rev.loc[df_rev['months'] == "02", 'newmonth'] = 2
+df_rev.loc[df_rev['months'] == "03", 'newmonth'] = 3
+df_rev.loc[df_rev['months'] == "04", 'newmonth'] = 4
+df_rev.loc[df_rev['months'] == "05", 'newmonth'] = 5
+df_rev.loc[df_rev['months'] == "06", 'newmonth'] = 6
+df_rev.loc[df_rev['months'] == "07", 'newmonth'] = 7
+df_rev.loc[df_rev['months'] == "08", 'newmonth'] = 8
+df_rev.loc[df_rev['months'] == "09", 'newmonth'] = 9
+df_rev.loc[df_rev['months'] == "10", 'newmonth'] = 10
+df_rev.loc[df_rev['months'] == "11", 'newmonth'] = 11
+df_rev.loc[df_rev['months'] == "12", 'newmonth'] = 12
+
+print(df_rev['months'])
+sns.set_style("darkgrid")
+g = sns.FacetGrid(data=df_rev, col='stars', margin_titles=True)
+g.axes[0,1].set_xticks([1,2,3,4,5,6,7,8,9,10,11,12])
+g.map(plt.hist, 'newmonth', bins=12)
+g.fig.suptitle('Figure 5: Month of review grouped by star')
+plt.show()
+storeImagePlotInDB(plt, db_diagrams, 'Figure 5_Month of review grouped by star')
+
+
+# ------------- Figure 6: Review_count distribution for businesses grouped by star -----------#
+df_rest['star'] = df_rest['stars']
+df_rest.loc[df_rest['stars'] == 1.5, 'star'] = 1
+df_rest.loc[df_rest['stars'] == 2.5, 'star'] = 2
+df_rest.loc[df_rest['stars'] == 3.5, 'star'] = 3
+df_rest.loc[df_rest['stars'] == 4.5, 'star'] = 4
+
+sns.set_style("darkgrid", {"axes.facecolor": ".9"})
+g = sns.FacetGrid(data=df_rest, col='star')
+g.map(plt.hist, 'review_count', bins=10)
+g.fig.suptitle('Figure 6: Review count distribution for businesses grouped by star')
+plt.show()
+storeImagePlotInDB(plt, db_diagrams, 'Figure 6_Review count distribution for businesses grouped by star')
+
+
+# -------------
+print ("Listing " + str(plt.get_figlabels()))
+# storing image into the database for later use
+storeImagePlotInDB(plt, db_diagrams, "second")
+plt.show()
