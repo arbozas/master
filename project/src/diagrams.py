@@ -23,7 +23,7 @@ def storeImagePlotInDB(plot, db_to_store, name):
     fs = gridfs.GridFS(db_to_store)
 
     # store the data in the database
-    fs.put(thedata, filename=name)
+    fs.put(thedata, filename=name, encoding='utf-8')
 
 # ------------- Figure 1: Distribution of star rating -----------#
 plt.figure(figsize=(12, 6))

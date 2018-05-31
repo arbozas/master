@@ -4,16 +4,21 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from collections import Counter
 from dateutil.parser import parse
+import gridfs
+import logging
+import sys
 
 import numpy as np
 client = pymongo.MongoClient('localhost', 27017)
 db = client['db']
+db_diagrams = client['diagrams']
 
 def find_all_restaurants():
     return db['restaurants'].find({})
 
 def insert_to_db(json_obj, collection_name):
     db[collection_name].insert(json_obj)
+
 #Load reviews
 def plot_pie(y):
     target_stats = Counter(y)
@@ -24,7 +29,10 @@ def plot_pie(y):
     ax.pie(sizes, explode=explode, labels=labels, shadow=True,
            autopct='%1.1f%%')
     ax.axis('equal')
+    # storing image into the database for later use
+    storeImagePlotInDB(plt, db_diagrams, "third")
     plt.show()
+
 def plot2(s):
     df_rev = pa.DataFrame(list(db['reviews'].find({}, {"_id":0,"stars":1,"business_id":1,"user_id":1})))
     df_rest= pa.DataFrame(list(db['restaurants'].find({}, { "_id": 0, "categories":1,"business_id":1,"review_count":1,"neighborhood":1})))
@@ -41,6 +49,21 @@ def plot2(s):
     # plot stars numbers
     plt.hist(df_rev_rest.stars)
 
+def storeImagePlotInDB(plot, db_to_store, name):
+    #tmp local image, to be delete
+    path_to_store = "./"+name+".png"
+    #print(path_to_store)
+    plot.savefig(path_to_store)
+
+    #open the file
+    datafile = open(path_to_store, "rb")
+    thedata = datafile.read()
+
+    # create a new gridfs object.
+    fs = gridfs.GridFS(db_to_store)
+
+    # store the data in the database
+    fs.put(thedata, filename=name, encoding='utf-8')
 
 def loadReviews(datalimit):
     if datalimit is 0:
@@ -76,6 +99,7 @@ def loadReviews(datalimit):
 
     #print("Reviews")
     #Number of reviews for each star category
+
 def starCount():
     #for i in range(6):
        # starcount=db['reviews'].find({"stars": i}, {'text':1,"_id":0,"stars":1 }).count()
@@ -116,7 +140,11 @@ def starCount():
     sns.barplot(cnt['neighborhood'], cnt.index, palette='RdBu', ax=ax1)
     ax1.set_xlabel('')
     ax1.set_title('Top neighborhood restaurants listed in Yelp')
+    # storing image into the database for later use
+    storeImagePlotInDB(plt, db_diagrams, "first")
     plt.show()
+
+
 
     df_rest['newneighborhood'] = df_rest['neighborhood']
     df_rest.loc[df_rest['neighborhood'] =="The Strip", 'newneighborhood'] = 1
@@ -195,4 +223,7 @@ def starCount():
     g = sns.FacetGrid(data=df_rev, col='stars')
     g.map(plt.hist,'newmonth', bins=12)
 
-plt.show()
+    print ("Listing " + str(plt.get_figlabels()))
+    # storing image into the database for later use
+    storeImagePlotInDB(plt, db_diagrams, "second")
+    plt.show()
