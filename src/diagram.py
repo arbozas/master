@@ -192,8 +192,8 @@ print(cnt)
 sns.barplot(cnt['newCategories'], cnt.index, palette='tab20')
 plt.xlabel('Number of restaurants')
 plt.ylabel("Categories", wrap=True)
-plt.title('Figure 7: Top 20 categories of restaurants')
-storeImagePlotInDB(plt, db_diagrams, 'Figure 7: Top-k categories of restaurants')
+plt.title('Figure 7 Top 20 categories of restaurants')
+storeImagePlotInDB(plt, db_diagrams, 'Figure 7 Top-k categories of restaurants')
 plt.show()
 
 # ------------- Figure 9: Total reviews and average stars per user -----------#
@@ -202,7 +202,7 @@ g = plt.scatter(df_users.review_count, df_users.average_stars)
 plt.xlabel('Total reviews per user')
 plt.ylabel("Average stars per user", wrap=True)
 plt.title('Figure 9a: Total reviews and average stars per user')
-storeImagePlotInDB(plt, db_diagrams, 'Figure 9b: Total reviews and average stars per user')
+storeImagePlotInDB(plt, db_diagrams, 'Figure 9a Total reviews and average stars per user')
 plt.show()
 
 x = np.log(df_users.review_count)
@@ -211,7 +211,7 @@ g = plt.scatter(x, df_users.average_stars, alpha=0.05, edgecolors='none')
 plt.xlabel('Total reviews per user')
 plt.ylabel("Average stars per user", wrap=True)
 plt.title('Figure 9b: Total reviews and average stars per user (x log)')
-storeImagePlotInDB(plt, db_diagrams, 'Figure 9b: LOG Total reviews and average stars per user')
+storeImagePlotInDB(plt, db_diagrams, 'Figure 9b LOG Total reviews and average stars per user')
 plt.show()
 
 #Show the the imballance class

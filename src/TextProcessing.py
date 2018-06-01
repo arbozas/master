@@ -52,7 +52,7 @@ def upper_to_lower(df,column,newColumn):
 #Transform text to tfIDF
 def textTFIDF(df):
     tvec = TfidfVectorizer(min_df=.0025, max_df=.1, ngram_range=(1, 2))#initialize TFIDF VECTORIZER
-    tvec_weights = tvec.fit_transform(df.finalReviews.dropna()).toarray()#Fit
+    tvec_weights = tvec.fit_transform(df.finalReviews.dropna())#Fit
     X_normalized = preprocessing.normalize(tvec_weights, norm='l2')#normalize
 
     return X_normalized
